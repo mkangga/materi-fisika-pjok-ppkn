@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dasbor Interaktif Materi Kelas 10 - Semester 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Visualization & Content Choices: 
+        - [PJOK] Info: Teknik bulu tangkis, atletik, senam. Goal: Mengorganisir & Menjelaskan. Method: Accordion untuk detail langkah-langkah, Tabel perbandingan (HTML) untuk membandingkan gaya. Interaction: Klik untuk membuka/menutup detail. Justification: Efisien menyajikan informasi prosedural yang panjang.
+        - [Pancasila] Info: Hierarki hukum, hak & kewajiban, tantangan kebinekaan. Goal: Menunjukkan struktur & Membandingkan. Method: Diagram hierarki (HTML/CSS), tabel interaktif, dan kartu informasi. Interaction: Hover untuk highlight. Justification: Visualisasi struktur lebih mudah dipahami daripada teks, dan tabel memudahkan perbandingan.
+        - [Fisika] Info: Momen Inersia & Kekekalan Energi. Goal: Membandingkan & Mensimulasikan. Method: (1) Bar Chart (Chart.js) untuk membandingkan konstanta momen inersia berbagai benda. (2) Bar Chart interaktif untuk mensimulasikan konversi Energi Potensial & Kinetik. Interaction: (1) Hover pada chart. (2) Tombol untuk mengubah posisi benda dan melihat perubahan energi. Justification: Visualisasi data abstrak (momen inersia) dan simulasi konsep dinamis (kekekalan energi) sangat efektif untuk pemahaman Fisika.
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 45vh; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .nav-item { transition: all 0.2s ease-in-out; }
+        .sidebar-item { transition: all 0.2s ease-in-out; }
+        .content-card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+        .content-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .hierarchy-item { border-left-width: 2px; }
+        .energy-btn.active { background-color: #0c4a6e; color: white; }
+    </style>
+</head>
+<body class="bg-stone-100 text-stone-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-sky-800">Dasbor Pembelajaran Interaktif</h1>
+            <p class="text-stone-600 mt-2">Materi Kelas 10 Semester 2 - Kurikulum Merdeka</p>
+        </header>
+
+        <nav class="flex justify-center bg-white rounded-xl shadow-md p-2 mb-8 space-x-2">
+            <button id="nav-pjok" class="nav-item flex-1 py-2 px-4 rounded-lg font-semibold text-stone-700 hover:bg-sky-100 hover:text-sky-800">🤸 PJOK</button>
+            <button id="nav-pancasila" class="nav-item flex-1 py-2 px-4 rounded-lg font-semibold text-stone-700 hover:bg-sky-100 hover:text-sky-800">⚖️ Pancasila</button>
+            <button id="nav-fisika" class="nav-item flex-1 py-2 px-4 rounded-lg font-semibold text-stone-700 hover:bg-sky-100 hover:text-sky-800">⚛️ Fisika</button>
+        </nav>
+
+        <div class="flex flex-col md:flex-row gap-8">
+            <aside id="sidebar-container" class="w-full md:w-1/4 lg:w-1/5">
+                <div class="text-center p-4 bg-white rounded-xl shadow-md">
+                    <p class="text-stone-500">Pilih mata pelajaran untuk melihat daftar topik.</p>
+                </div>
+            </aside>
+            <main id="content-container" class="w-full md:w-3/4 lg:w-4/5 bg-white p-6 rounded-2xl shadow-lg">
+                <div id="content-display">
+                     <div class="text-center py-16">
+                        <h2 class="text-2xl font-semibold text-sky-700">Selamat Datang di Semester 2!</h2>
+                        <p class="mt-4 text-stone-600">Mari lanjutkan petualangan belajar kita. Pilih salah satu mata pelajaran di atas untuk memulai.</p>
+                        <div class="mt-8 text-5xl">📚✨</div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+    </div>
+
+    <script>
+        const appData = {
+            pjok: {
+                title: "Pendidikan Jasmani, Olahraga, & Kesehatan",
+                sidebar: [
+                    { id: 'intro', title: 'Pendahuluan' },
+                    { id: 'bulu_tangkis', title: 'Unit 5: Bulu Tangkis' },
+                    { id: 'atletik', title: 'Unit 6: Atletik' },
+                    { id: 'senam', title: 'Unit 7: Aktivitas Senam' },
+                    { id: 'irama', title: 'Unit 8: Gerak Berirama' }
+                ],
+                content: {
+                    intro: `<h2 class="text-2xl font-bold text-sky-700 mb-4">Lanjutkan Petualangan Olahragamu!</h2><p class="text-stone-700 leading-relaxed">Selamat datang kembali di pelajaran PJOK! Di semester kedua ini, kita akan melanjutkan perjalanan untuk mengembangkan kebugaran fisik, mengasah keterampilan olahraga yang lebih spesifik, dan memperdalam pemahaman tentang gaya hidup sehat. Pembelajaran akan tetap seru, relevan, dan menantang, mendorong Anda untuk aktif bergerak dan berpikir kritis. Mari kita jelajahi unit-unit pembelajaran yang menarik seperti bulu tangkis, atletik, senam, dan gerak berirama!</p>`,
+                    bulu_tangkis: `
+                        <h2 class="text-2xl font-bold text-sky-700 mb-4">Unit 5: Permainan Bulu Tangkis</h2>
+                        <p class="text-stone-700 leading-relaxed mb-6">Bulu tangkis adalah olahraga raket yang membutuhkan kecepatan, kelincahan, dan strategi. Unit ini akan fokus pada penguasaan teknik-teknik pukulan krusial yang akan meningkatkan kualitas permainan Anda. Klik setiap teknik untuk mempelajari langkah-langkahnya.</p>
+                        <div class="space-y-4">
+                            ${createAccordion('smash_lob', 'Pukulan Smash dan Lob', `
+                                <h4 class="font-semibold text-lg text-sky-800">Pukulan Smash</h4>
+                                <p class="mb-2">Pukulan serangan yang keras dan menukik untuk mematikan lawan. Kunci utamanya adalah ayunan raket yang cepat dan perkenaan kok di titik tertinggi.</p>
+                                <h4 class="font-semibold text-lg text-sky-800 mt-4">Pukulan Lob (Clear)</h4>
+                                <p>Pukulan melambung tinggi ke arah garis belakang lawan, bertujuan untuk pertahanan atau mengatur kembali ritme permainan.</p>
+                            `)}
+                            ${createAccordion('drop_shot_net', 'Pukulan Drop Shot dan Net Play', `
+                                <h4 class="font-semibold text-lg text-sky-800">Pukulan Drop Shot</h4>
+                                <p class="mb-2">Pukulan tipuan yang dilakukan seperti akan smash, namun kok disentuh halus agar jatuh tipis di dekat net lawan.</p>
+                                <h4 class="font-semibold text-lg text-sky-800 mt-4">Net Play (Permainan Net)</h4>
+                                <p>Pukulan yang dilakukan sangat dekat dengan net, membutuhkan sentuhan halus dan akurasi tinggi untuk membuat kok jatuh serapat mungkin dengan bibir net.</p>
+                            `)}
+                        </div>
+                        <h3 class="font-semibold text-xl text-sky-800 mt-8 mb-4">Tabel Perbandingan Teknik Pukulan</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-stone-500">
+                                <thead class="text-xs text-stone-700 uppercase bg-stone-100">
+                                    <tr><th scope="col" class="px-6 py-3">Pukulan</th><th scope="col" class="px-6 py-3">Tujuan Utama</th><th scope="col" class="px-6 py-3">Karakteristik Gerak</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b"><td class="px-6 py-4 font-medium">Smash</td><td class="px-6 py-4">Menyerang & mematikan lawan</td><td class="px-6 py-4">Keras, cepat, menukik</td></tr>
+                                    <tr class="bg-stone-50 border-b"><td class="px-6 py-4 font-medium">Lob</td><td class="px-6 py-4">Bertahan & mengulur waktu</td><td class="px-6 py-4">Tinggi, melambung ke belakang</td></tr>
+                                    <tr class="bg-white border-b"><td class="px-6 py-4 font-medium">Drop Shot</td><td class="px-6 py-4">Mengecoh & menipu lawan</td><td class="px-6 py-4">Pelan, tipis di dekat net</td></tr>
+                                    <tr class="bg-stone-50"><td class="px-6 py-4 font-medium">Net Play</td><td class="px-6 py-4">Mengontrol area depan</td><td class="px-6 py-4">Sentuhan halus, akurat</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `,
+                    atletik: `
+                        <h2 class="text-2xl font-bold text-sky-700 mb-4">Unit 6: Atletik</h2>
+                        <p class="text-stone-700 leading-relaxed mb-6">Atletik, sang "induk dari semua cabang olahraga", melatih gerakan dasar manusia. Semester ini kita akan mendalami nomor lari, lompat, dan tolak dengan teknik yang lebih spesifik.</p>
+                        <div class="space-y-4">
+                            ${createAccordion('lari_sprint', 'Lari Jarak Pendek (Sprint)', `
+                                <p>Fokus pada tiga fase krusial: <b>Start Jongkok</b> untuk tolakan eksplosif, <b>Gerakan Lari</b> dengan koordinasi lengan dan kaki untuk kecepatan maksimal, dan teknik <b>Memasuki Garis Finis</b>.</p>
+                            `)}
+                            ${createAccordion('lompat_jauh', 'Lompat Jauh', `
+                                <p>Melibatkan empat fase: <b>Awalan</b> untuk membangun kecepatan, <b>Tolakan</b> untuk mengubah kecepatan horizontal menjadi vertikal, <b>Melayang di Udara</b> (dengan gaya jongkok, menggantung, atau berjalan di udara), dan <b>Mendarat</b> yang efisien.</p>
+                            `)}
+                            ${createAccordion('tolak_peluru', 'Tolak Peluru', `
+                                <p>Kunci utama adalah <b>"menolak"</b> bukan "melempar". Gerakan ini menggunakan kekuatan dari seluruh tubuh. Dua gaya utama yang dipelajari adalah <b>Gaya Ortodoks (menyamping)</b> yang lebih sederhana dan <b>Gaya O'Brien (membelakangi)</b> yang lebih kompleks namun berpotensi lebih jauh.</p>
+                            `)}
+                        </div>
+                    `,
+                    senam: `
+                        <h2 class="text-2xl font-bold text-sky-700 mb-4">Unit 7: Aktivitas Senam</h2>
+                        <p class="text-stone-700 leading-relaxed mb-6">Aktivitas senam mengembangkan kelenturan, kekuatan, keseimbangan, dan koordinasi. Pastikan selalu melakukan pemanasan yang cukup dan berlatih di bawah pengawasan untuk menjaga keselamatan.</p>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="content-card bg-stone-50 p-4 rounded-lg border">
+                                <h3 class="font-semibold text-lg text-sky-800">Meroda (Cartwheel)</h3>
+                                <p class="text-sm mt-2">Gerakan memutar tubuh ke samping dengan tumpuan kedua tangan secara bergantian, melatih keseimbangan dinamis.</p>
+                            </div>
+                             <div class="content-card bg-stone-50 p-4 rounded-lg border">
+                                <h3 class="font-semibold text-lg text-sky-800">Guling Depan Kop-kip (Roll Kiep)</h3>
+                                <p class="text-sm mt-2">Gabungan guling depan yang dilanjutkan dengan gerakan melenting untuk kembali ke posisi berdiri. Membutuhkan kekuatan perut dan punggung.</p>
+                            </div>
+                             <div class="content-card bg-stone-50 p-4 rounded-lg border">
+                                <h3 class="font-semibold text-lg text-sky-800">Lenting Kepala (Headspring)</h3>
+                                <p class="text-sm mt-2">Gerakan melentingkan badan ke depan atas dengan tumpuan awal pada dahi dan kedua tangan.</p>
+                            </div>
+                            <div class="content-card bg-stone-50 p-4 rounded-lg border">
+                                <h3 class="font-semibold text-lg text-sky-800">Lompat Guling di atas Peti Lompat</h3>
+                                <p class="text-sm mt-2">Kombinasi lari, tolakan, melompati peti, melakukan guling depan di atasnya, dan mendarat. Membutuhkan keberanian dan teknik.</p>
+                            </div>
+                        </div>
+                    `,
+                    irama: `
+                        <h2 class="text-2xl font-bold text-sky-700 mb-4">Unit 8: Aktivitas Gerak Berirama</h2>
+                        <p class="text-stone-700 leading-relaxed mb-6">Gerak berirama adalah aktivitas fisik yang menyelaraskan gerakan tubuh dengan irama musik atau hitungan, menekankan pada keluwesan, kontinuitas, dan ketepatan ritme.</p>
+                         <div class="space-y-4">
+                            ${createAccordion('cha_cha', 'Pola Langkah Irama Cha-cha', `
+                                <p>Mempelajari pola langkah dasar dengan irama cha-cha yang enerjik untuk mengembangkan koordinasi dan kemampuan mengikuti ritme. Termasuk langkah dasar di tempat, maju, mundur, dan ke samping.</p>
+                            `)}
+                            ${createAccordion('lompat_tali', 'Lompat Tali (Skipping)', `
+                                <p>Latihan kardiovaskular yang sangat baik. Variasi gerakan kaki seperti <b>Lompat Menyamping (Side Straddle)</b> dan <b>Lompat Satu Kaki</b> membuatnya lebih menantang dan menyenangkan.</p>
+                            `)}
+                        </div>
+                         <h3 class="font-semibold text-xl text-sky-800 mt-8 mb-4">Manfaat Gerak Berirama</h3>
+                         <ul class="list-disc list-inside space-y-2 text-stone-700">
+                             <li>Meningkatkan kesehatan jantung dan paru-paru.</li>
+                             <li>Melatih keseimbangan, kekuatan, dan fleksibilitas.</li>
+                             <li>Mengoptimalkan fungsi otak dan melatih konsentrasi.</li>
+                             <li>Membantu melepaskan stres dan meningkatkan rasa percaya diri.</li>
+                         </ul>
+                    `,
+                }
+            },
+            pancasila: {
+                title: "Pendidikan Pancasila",
+                sidebar: [
+                    { id: 'intro', title: 'Pendahuluan' },
+                    { id: 'tema1', title: 'Tema 1: UUD 1945' },
+                    { id: 'tema2', title: 'Tema 2: Bhinneka Tunggal Ika' },
+                    { id: 'tema3', title: 'Tema 3: NKRI & Wawasan Nusantara' }
+                ],
+                content: {
+                    intro: `<h2 class="text-2xl font-bold text-sky-700 mb-4">Pilar Bangsa: UUD 1945, Bhinneka Tunggal Ika, NKRI</h2><p class="text-stone-700 leading-relaxed">Semester kedua ini akan memperdalam pemahaman kita tentang pilar-pilar kehidupan berbangsa dan bernegara. Kita akan mengkaji UUD NRI Tahun 1945 sebagai landasan konstitusional, meresapi makna Bhinneka Tunggal Ika sebagai perekat persatuan, dan memahami hakikat NKRI sebagai bentuk negara final. Pemahaman ini adalah kelanjutan dari nilai-nilai Pancasila yang telah kita pelajari.</p>`,
+                    tema1: `
+                        <h2 class="text-2xl font-bold text-sky-700 mb-4">Tema 1: UUD NRI Tahun 1945</h2>
+                        <p class="text-stone-700 leading-relaxed mb-6">UUD 1945 adalah hukum dasar tertulis dan sumber hukum tertinggi di Indonesia. Memahaminya berarti memahami aturan main dalam bernegara.</p>
+                        <div class="space-y-4">
+                            ${createAccordion('konstitusi', 'Konstitusi, Sifat, dan Hubungannya dengan Pancasila', `
+                                <p>UUD 1945 bersifat <b>singkat, supel (fleksibel), dan rigid (kaku)</b> dalam perubahannya. Hubungannya dengan Pancasila sangat erat: Pancasila tercantum dalam Pembukaan UUD 1945 dan menjadi jiwa dari seluruh pasalnya.</p>
+                            `)}
+                            ${createAccordion('hak_kewajiban', 'Hak dan Kewajiban Warga Negara', `
+                                <p>UUD 1945 secara seimbang mengatur hak dan kewajiban. Contoh: <b>Hak</b> mendapat pendidikan (Pasal 31) dan <b>Kewajiban</b> membela negara (Pasal 27 Ayat 3).</p>
+                            `)}
+                             ${createAccordion('hierarki_hukum', 'Hierarki Peraturan Perundang-undangan', `
+                                <p class="mb-4">Peraturan yang lebih rendah tidak boleh bertentangan dengan yang lebih tinggi. Berikut tata urutannya:</p>
+                                <div class="space-y-2 text-sm">
+                                    <div class="hierarchy-item border-sky-800 p-2 pl-4 bg-sky-50 rounded-r-lg"><b>1. UUD NRI Tahun 1945</b></div>
+                                    <div class="hierarchy-item border-sky-700 p-2 pl-8 bg-sky-50 rounded-r-lg"><b>2. Tap MPR</b></div>
+                                    <div class="hierarchy-item border-sky-600 p-2 pl-12 bg-sky-50 rounded-r-lg"><b>3. UU / Perppu</b></div>
+                                    <div class="hierarchy-item border-sky-500 p-2 pl-16 bg-sky-50 rounded-r-lg"><b>4. Peraturan Pemerintah (PP)</b></div>
+                                    <div class="hierarchy-item border-sky-400 p-2 pl-20 bg-sky-50 rounded-r-lg"><b>5. Peraturan Presiden (Perpres)</b></div>
+                                    <div class="hierarchy-item border-sky-300 p-2 pl-24 bg-sky-50 rounded-r-lg"><b>6. Perda Provinsi</b></div>
+                                    <div class="hierarchy-item border-sky-200 p-2 pl-28 bg-sky-50 rounded-r-lg"><b>7. Perda Kab/Kota</b></div>
+                                </div>
+                            `)}
+                        </div>
+                    `,
+                    tema2: `
+                        <h2 class="text-2xl font-bold text-sky-700 mb-4">Tema 2: Bhinneka Tunggal Ika</h2>
+                        <p class="text-stone-700 leading-relaxed mb-6">"Berbeda-beda tetapi tetap satu jua". Semboyan ini adalah perekat persatuan kita di tengah keragaman suku, agama, ras, dan budaya.</p>
+                        <div class="space-y-4">
+                            ${createAccordion('makna_fungsi', 'Makna dan Fungsi', `
+                                <p>Berasal dari Kitab Sutasoma, semboyan ini berfungsi sebagai pedoman hidup dalam keberagaman, mengajarkan toleransi, dan menjadi landasan persatuan nasional.</p>
+                            `)}
+                            ${createAccordion('implementasi', 'Implementasi dan Tantangan', `
+                                <p>Implementasinya adalah dengan bersikap inklusif, tidak sektarian, dan mengedepankan gotong royong. Tantangannya meliputi etnosentrisme, kesenjangan sosial, dan penyebaran hoaks. Kita harus melawannya dengan pendidikan multikultural dan literasi digital.</p>
+                            `)}
+                        </div>
+                    `,
+                    tema3: `
+                        <h2 class="text-2xl font-bold text-sky-700 mb-4">Tema 3: NKRI & Wawasan Nusantara</h2>
+                        <p class="text-stone-700 leading-relaxed mb-6">NKRI adalah bentuk negara final kita. Wawasan Nusantara adalah cara pandang kita sebagai bangsa untuk menjaga keutuhan NKRI.</p>
+                        <div class="space-y-4">
+                            ${createAccordion('hakikat_nkri', 'Hakikat dan Tujuan NKRI', `
+                                <p>Tujuan NKRI tercantum dalam Pembukaan UUD 1945: melindungi segenap bangsa, memajukan kesejahteraan umum, mencerdaskan kehidupan bangsa, dan ikut melaksanakan ketertiban dunia.</p>
+                            `)}
+                            ${createAccordion('wawasan_nusantara', 'Wawasan Nusantara (Astagatra)', `
+                                <p>Cara pandang bangsa Indonesia terhadap diri dan lingkungannya. Terdiri dari aspek alamiah (<b>Trigatra</b>: geografi, kekayaan alam, penduduk) dan aspek sosial (<b>Pancagatra</b>: ideologi, politik, ekonomi, sosial budaya, hankam).</p>
+                            `)}
+                            ${createAccordion('bela_negara', 'Ancaman dan Bela Negara', `
+                                <p>Ancaman terhadap NKRI bisa bersifat <b>militer</b> (agresi) atau <b>non-militer</b> (ideologi asing, narkoba, serangan siber). Setiap warga negara berhak dan wajib ikut serta dalam upaya <b>bela negara</b> sesuai dengan profesi dan kemampuannya, termasuk belajar dengan tekun bagi pelajar.</p>
+                            `)}
+                        </div>
+                    `
+                }
+            },
+            fisika: {
+                title: "Fisika",
+                sidebar: [
+                    { id: 'intro', title: 'Pendahuluan' },
+                    { id: 'rotasi', title: 'Dinamika Rotasi' },
+                    { id: 'energi', title: 'Kekekalan Energi Mekanik' }
+                ],
+                content: {
+                    intro: `<h2 class="text-2xl font-bold text-sky-700 mb-4">Gerak, Energi, dan Getaran</h2><p class="text-stone-700 leading-relaxed">Semester ini kita akan melangkah lebih jauh dari gerak lurus. Kita akan mempelajari mengapa benda berputar (Dinamika Rotasi), bagaimana energi berubah bentuk namun jumlahnya tetap (Kekekalan Energi), dan fenomena getaran serta gelombang yang ada di mana-mana. Konsep-konsep ini adalah dasar dari banyak teknologi modern.</p>`,
+                    rotasi: `
+                        <h2 class="text-2xl font-bold text-sky-700 mb-4">Dinamika Rotasi & Kesetimbangan</h2>
+                        <p class="text-stone-700 leading-relaxed mb-6">Bab ini membahas "gaya" yang menyebabkan benda berputar (Torsi) dan "kelembaman" dalam gerak putar (Momen Inersia). Grafik di bawah ini membandingkan momen inersia beberapa benda. Semakin besar nilainya (konstanta 'k'), semakin sulit benda itu untuk diputar.</p>
+                        <div class="chart-container">
+                            <canvas id="inersiaChart"></canvas>
+                        </div>
+                        <div class="mt-6 space-y-4">
+                             ${createAccordion('torsi', 'Torsi (Momen Gaya)', `
+                                <p>Penyebab benda berputar. Besarnya tergantung pada gaya, jarak ke poros (lengan momen), dan sudut. Rumus: <b>τ = rF sin(θ)</b>.</p>
+                            `)}
+                            ${createAccordion('titik_berat', 'Titik Berat & Kesetimbangan', `
+                                <p>Titik berat adalah pusat massa suatu benda. Syarat benda setimbang ada dua: resultan gaya nol (<b>ΣF=0</b>) dan resultan torsi nol (<b>Στ=0</b>).</p>
+                            `)}
+                        </div>
+                        `,
+                    energi: `
+                        <h2 class="text-2xl font-bold text-sky-700 mb-4">Hukum Kekekalan Energi Mekanik</h2>
+                        <p class="text-stone-700 leading-relaxed mb-6">Hukum ini menyatakan bahwa energi tidak dapat diciptakan atau dimusnahkan, hanya bisa berubah bentuk. Energi Mekanik (EM) adalah jumlah Energi Kinetik (EK, energi gerak) dan Energi Potensial (EP, energi posisi). Dalam sistem tanpa gesekan, <b>EM selalu konstan</b>.</p>
+                        <div class="chart-container" id="energiChartContainer">
+                            <canvas id="energiChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-stone-600 mt-2">Klik tombol di bawah untuk melihat simulasi bola jatuh.</p>
+                        <div id="energy-controls" class="flex justify-center space-x-2 mt-4">
+                            <button class="energy-btn px-4 py-2 bg-sky-100 text-sky-800 rounded-lg font-semibold transition" data-state="top">Posisi Puncak</button>
+                            <button class="energy-btn px-4 py-2 bg-sky-100 text-sky-800 rounded-lg font-semibold transition" data-state="mid">Posisi Tengah</button>
+                            <button class="energy-btn px-4 py-2 bg-sky-100 text-sky-800 rounded-lg font-semibold transition" data-state="bottom">Posisi Bawah</button>
+                        </div>
+                    `,
+                }
+            }
+        };
+
+        const navPjok = document.getElementById('nav-pjok');
+        const navPancasila = document.getElementById('nav-pancasila');
+        const navFisika = document.getElementById('nav-fisika');
+        const sidebarContainer = document.getElementById('sidebar-container');
+        const contentDisplay = document.getElementById('content-display');
+        let currentChart = null;
+
+        function createAccordion(id, title, content) {
+            return `
+                <div class="border border-stone-200 rounded-lg">
+                    <button id="accordion-btn-${id}" class="accordion-toggle w-full flex justify-between items-center text-left p-4 bg-stone-50 hover:bg-stone-100 rounded-lg focus:outline-none">
+                        <span class="font-semibold text-stone-700">${title}</span>
+                        <span class="transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div id="accordion-content-${id}" class="accordion-content px-4">
+                        <div class="py-4 border-t border-stone-200">${content}</div>
+                    </div>
+                </div>`;
+        }
+        
+        function setupAccordions() {
+             document.querySelectorAll('.accordion-toggle').forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = button.nextElementSibling;
+                    const icon = button.querySelector('span:last-child');
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
+                        document.querySelectorAll('.accordion-toggle span:last-child').forEach(i => i.style.transform = 'rotate(0deg)');
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        icon.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+        }
+
+        function setActiveNav(activeButton) {
+            [navPjok, navPancasila, navFisika].forEach(btn => {
+                btn.classList.remove('bg-sky-700', 'text-white');
+                btn.classList.add('text-stone-700', 'hover:bg-sky-100', 'hover:text-sky-800');
+            });
+            activeButton.classList.add('bg-sky-700', 'text-white');
+            activeButton.classList.remove('text-stone-700', 'hover:bg-sky-100', 'hover:text-sky-800');
+        }
+
+        function showTopic(subjectKey, topicId) {
+            const topicContent = appData[subjectKey].content[topicId];
+            contentDisplay.innerHTML = topicContent;
+            
+            sidebarContainer.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('bg-sky-100', 'text-sky-800', 'font-bold');
+                if (item.dataset.topicId === topicId) {
+                    item.classList.add('bg-sky-100', 'text-sky-800', 'font-bold');
+                }
+            });
+
+            if (currentChart) {
+                currentChart.destroy();
+                currentChart = null;
+            }
+
+            if (topicId === 'rotasi') {
+                renderInersiaChart();
+            } else if (topicId === 'energi') {
+                renderEnergiChart();
+                setupEnergyControls();
+            }
+            
+            setupAccordions();
+        }
+
+        function showSubject(subjectKey) {
+            const subjectData = appData[subjectKey];
+            sidebarContainer.innerHTML = `
+                <div class="bg-white rounded-xl shadow-md p-4 sticky top-8">
+                    <h3 class="text-lg font-bold text-sky-800 mb-4 border-b pb-2">${subjectData.title}</h3>
+                    <div class="space-y-1">
+                        ${subjectData.sidebar.map(item => `
+                            <a href="#" class="sidebar-item block w-full text-left px-4 py-2 rounded-md text-stone-600 hover:bg-sky-100 hover:text-sky-800" data-topic-id="${item.id}">
+                                ${item.title}
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>`;
+
+            sidebarContainer.querySelectorAll('.sidebar-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showTopic(subjectKey, item.dataset.topicId);
+                });
+            });
+
+            showTopic(subjectKey, subjectData.sidebar[0].id);
+        }
+        
+        function renderInersiaChart() {
+            const ctx = document.getElementById('inersiaChart').getContext('2d');
+            const data = {
+                labels: ['Cincin Tipis', 'Silinder Pejal', 'Bola Berongga', 'Bola Pejal', 'Batang (ujung)', 'Batang (pusat)'],
+                datasets: [{
+                    label: 'Konstanta Momen Inersia (k)',
+                    data: [1, 0.5, 2/3, 2/5, 1/3, 1/12],
+                    backgroundColor: [
+                        'rgba(56, 189, 248, 0.6)', 'rgba(34, 211, 238, 0.6)', 
+                        'rgba(163, 230, 53, 0.6)', 'rgba(251, 191, 36, 0.6)',
+                        'rgba(249, 115, 22, 0.6)', 'rgba(239, 68, 68, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgb(56, 189, 248)', 'rgb(34, 211, 238)',
+                        'rgb(163, 230, 53)', 'rgb(251, 191, 36)',
+                        'rgb(249, 115, 22)', 'rgb(239, 68, 68)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: data,
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, title: { display: true, text: 'Perbandingan Momen Inersia (I = k·MR²)'} },
+                    scales: { x: { beginAtZero: true, title: { display: true, text: 'Nilai Konstanta (k)' } } }
+                }
+            });
+        }
+
+        function renderEnergiChart(epValue = 100, ekValue = 0) {
+            const container = document.getElementById('energiChartContainer');
+            if (!container) return;
+            const canvas = document.getElementById('energiChart');
+            const ctx = canvas.getContext('2d');
+
+            if (currentChart) {
+                currentChart.data.datasets[0].data = [epValue];
+                currentChart.data.datasets[1].data = [ekValue];
+                currentChart.data.datasets[2].data = [epValue + ekValue];
+                currentChart.update();
+                return;
+            }
+
+            const data = {
+                labels: ['Energi'],
+                datasets: [
+                    { label: 'Energi Potensial (EP)', data: [epValue], backgroundColor: 'rgba(56, 189, 248, 0.7)' },
+                    { label: 'Energi Kinetik (EK)', data: [ekValue], backgroundColor: 'rgba(249, 115, 22, 0.7)' },
+                    { label: 'Energi Mekanik (EM)', data: [epValue + ekValue], backgroundColor: 'rgba(139, 92, 246, 0.7)' },
+                ]
+            };
+            
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { title: { display: true, text: 'Simulasi Konversi Energi' } },
+                    scales: { 
+                        x: { stacked: false }, 
+                        y: { stacked: false, beginAtZero: true, max: 120, title: {display: true, text: 'Joule (satuan energi)'}}
+                    }
+                }
+            });
+        }
+        
+        function setupEnergyControls() {
+            const buttons = document.querySelectorAll('.energy-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const state = button.dataset.state;
+                    if (state === 'top') {
+                        renderEnergiChart(100, 0);
+                    } else if (state === 'mid') {
+                        renderEnergiChart(50, 50);
+                    } else if (state === 'bottom') {
+                        renderEnergiChart(0, 100);
+                    }
+                });
+            });
+            // Set initial state
+            buttons[0].classList.add('active');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            navPjok.addEventListener('click', () => { setActiveNav(navPjok); showSubject('pjok'); });
+            navPancasila.addEventListener('click', () => { setActiveNav(navPancasila); showSubject('pancasila'); });
+            navFisika.addEventListener('click', () => { setActiveNav(navFisika); showSubject('fisika'); });
+        });
+    </script>
+</body>
+</html>
